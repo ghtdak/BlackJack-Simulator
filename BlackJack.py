@@ -8,16 +8,20 @@ import matplotlib.pyplot as plt
 
 from importer.StrategyImporter import StrategyImporter
 
-
 GAMES = 100
 ROUNDS_PER_GAME = 20
 SHOE_SIZE = 8
 SHOE_PENETRATION = 0.05
 BET_SPREAD = 20.0
-
 DECK_SIZE = 52.0
-CARDS = {"Ace": 11, "Two": 2, "Three": 3, "Four": 4, "Five": 5, "Six": 6, "Seven": 7, "Eight": 8, "Nine": 9, "Ten": 10, "Jack": 10, "Queen": 10, "King": 10}
-BASIC_OMEGA_II = {"Ace": 0, "Two": 1, "Three": 1, "Four": 2, "Five": 2, "Six": 2, "Seven": 1, "Eight": 0, "Nine": -1, "Ten": -2, "Jack": -2, "Queen": -2, "King": -2}
+
+CARDS = {
+    "Ace": 11, "Two": 2, "Three": 3, "Four": 4, "Five": 5, "Six": 6, "Seven": 7,
+    "Eight": 8, "Nine": 9, "Ten": 10, "Jack": 10, "Queen": 10, "King": 10}
+
+BASIC_OMEGA_II = {
+    "Ace": 0, "Two": 1, "Three": 1, "Four": 2, "Five": 2, "Six": 2, "Seven": 1,
+    "Eight": 0, "Nine": -1, "Ten": -2, "Jack": -2, "Queen": -2, "King": -2}
 
 HARD_STRATEGY = {}
 SOFT_STRATEGY = {}
@@ -28,9 +32,10 @@ class Card(object):
     """
     Represents a playing card with name and value.
     """
-    def __init__(self, name, value):
+
+    def __init__(self, name, _value):
         self.name = name
-        self.value = value
+        self.value = _value
 
     def __str__(self):
         return "%s" % self.name
@@ -64,15 +69,15 @@ class Shoe(object):
         cards = []
         for d in range(self.decks):
             for c in CARDS:
-                for i in range(0, 4):
+                for _ in range(0, 4):
                     cards.append(Card(c, CARDS[c]))
         shuffle(cards)
         return cards
 
     def deal(self):
         """
-        Returns:    The next card off the shoe. If the shoe penetration is reached,
-                    the shoe gets reshuffled.
+        Returns:    The next card off the shoe. If the shoe penetration is
+        reached, the shoe gets reshuffled.
         """
         if self.shoe_penetration() < SHOE_PENETRATION:
             self.reshuffle = True
@@ -99,6 +104,7 @@ class Shoe(object):
         """
         return len(self.cards) / (DECK_SIZE * self.decks)
 
+
 class Hand(object):
     """
     Represents a hand, either from the dealer or from the player
@@ -122,7 +128,8 @@ class Hand(object):
     @property
     def value(self):
         """
-        Returns: The current value of the hand (aces are either counted as 1 or 11).
+        Returns: The current value of the hand (aces are either counted as 1
+        or 11).
         """
         self._value = 0
         for c in self.cards:
@@ -162,7 +169,8 @@ class Hand(object):
 
     def soft(self):
         """
-        Determines whether the current hand is soft (soft means that it consists of aces valued at 11).
+        Determines whether the current hand is soft (soft means that it
+        consists of aces valued at 11).
         """
         if self.aces_soft > 0:
             return True
@@ -229,6 +237,7 @@ class Player(object):
     """
     Represent a player
     """
+
     def __init__(self, hand=None, dealer_hand=None):
         self.hands = [hand]
         self.dealer_hand = dealer_hand
@@ -275,14 +284,15 @@ class Player(object):
 
             if flag == 'H':
                 self.hit(hand, shoe)
-                
+
             if flag == 'P':
                 self.split(hand, shoe)
-                
-            if flag == 'S': 
-                break                   
 
-    def hit(self, hand, shoe):
+            if flag == 'S':
+                break
+
+    @staticmethod
+    def hit(hand, shoe):
         c = shoe.deal()
         hand.add_card(c)
         # print "Hitted: %s" % c
@@ -297,6 +307,7 @@ class Dealer(object):
     """
     Represent the dealer
     """
+
     def __init__(self, hand=None):
         self.hand = hand
 
@@ -317,6 +328,7 @@ class Game(object):
     """
     A sequence of Blackjack Rounds that keeps track of total money won or lost
     """
+
     def __init__(self):
         self.shoe = Shoe(SHOE_SIZE)
         self.money = 0.0
@@ -326,6 +338,7 @@ class Game(object):
 
     def get_hand_winnings(self, hand):
         win = 0.0
+        status = None
         if not hand.surrender:
             if hand.busted():
                 status = "LOST"
@@ -381,25 +394,29 @@ class Game(object):
         self.dealer.play(self.shoe)
 
         # print ""
-        
+
         for hand in self.player.hands:
             win = self.get_hand_winnings(hand)
             self.money += win
-            # print "Player Hand: %s %s (Value: %d, Busted: %r, BlackJack: %r, Splithand: %r, Soft: %r, Surrender: %r, Doubled: %r)" % (hand, status, hand.value, hand.busted(), hand.blackjack(), hand.splithand, hand.soft(), hand.surrender, hand.doubled)
-        
-        # print "Dealer Hand: %s (%d)" % (self.dealer.hand, self.dealer.hand.value)
+            # print "Player Hand: %s %s (Value: %d, Busted: %r, BlackJack:
+            # %r, Splithand: %r, Soft: %r, Surrender: %r, Doubled: %r)" % (
+            # hand, status, hand.value, hand.busted(), hand.blackjack(),
+            # hand.splithand, hand.soft(), hand.surrender, hand.doubled)
+
+        # print "Dealer Hand: %s (%d)" % (self.dealer.hand,
+        # self.dealer.hand.value)
 
         if self.shoe.reshuffle:
             self.shoe.reshuffle = False
             self.shoe.cards = self.shoe.init_cards()
 
     def get_money(self):
-        return self.money    
+        return self.money
 
 
 if __name__ == "__main__":
     importer = StrategyImporter(sys.argv[1])
-    HARD_STRATEGY, SOFT_STRATEGY, PAIR_STRATEGY = importer.import_player_strategy()
+    HARD_STRATEGY, SOFT_STRATEGY, PAIR_STRATEGY = importer.import_strategy()
 
     moneys = []
     countings = []
@@ -414,18 +431,19 @@ if __name__ == "__main__":
         moneys.append(game.get_money())
         countings += game.shoe.count_history
 
-        print "WIN for Game no. %d: %f" % (g + 1, game.get_money())
+        print("WIN for Game no. %d: %f" % (g + 1, game.get_money()))
 
     sume = 0.0
     for value in moneys:
         sume += value
-    print "Overall: %f" % sume
+    print("Overall: %f" % sume)
 
     moneys = sorted(moneys)
-    fit = stats.norm.pdf(moneys, np.mean(moneys), np.std(moneys))  #this is a fitting indeed
-    pl.plot(moneys,fit,'-o')
-    pl.hist(moneys,normed=True) #use this to draw histogram of your data
-    pl.show()                   #use may also need add this 
+    # this is a fitting indeed
+    fit = stats.norm.pdf(moneys, np.mean(moneys), np.std(moneys))
+    pl.plot(moneys, fit, '-o')
+    pl.hist(moneys, normed=True)  # use this to draw histogram of your data
+    pl.show()  # use may also need add this
 
     plt.ylabel('count')
     plt.plot(countings, label='x')
